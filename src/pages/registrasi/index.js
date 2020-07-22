@@ -11,9 +11,14 @@ import Button from '@material-ui/core/Button';
 // import styles
 import useStyles from './styles';
 // react router-dom
-import { Link } from 'react-router-dom'
+import { Link, Redirect } from 'react-router-dom'
 // validasi
 import isEmail from 'validator/lib/isEmail';
+// firebase hook
+import { useFirebase } from '../../components/FirebaseProvider';
+// loading
+import AppLoading from '../../components/AppLoading'
+
 
 export default function Registrasi () {
     const classes = useStyles();
@@ -31,6 +36,11 @@ export default function Registrasi () {
         password: '',
         konfirmasi_password: ''
     })
+
+    const [isSubmiting, setSubmitting] = useState(false)
+
+    // auth firebase
+    const { auth, user, loading } = useFirebase();
 
     // handle form
     const handleChange = e => {
@@ -74,13 +84,48 @@ export default function Registrasi () {
     }
 
     // handle submit
-    const handleSubmit = e => {
+    const handleSubmit = async e => {
         e.preventDefault();
         const findErrors = validate();
 
-        if (Object.keys(findErrors).some(err => err !== '')) {
+        if (Object.values(findErrors).some(err => err !== '')) {
             setError(findErrors);
+        } else {
+            try {
+                setSubmitting(true);
+                await auth.createUserWithEmailAndPassword(form.email, form.password)
+            } catch (e) {
+                const newError = {};
+
+
+                switch (e.code) {
+                    case 'auth/email-already-in-use':
+                        newError.email = 'Email sudah terdaftar'
+                        break;
+                    case 'auth/invalid-email':
+                        newError.email = 'Email tidak valid'
+                        break;
+                    case 'auth/weak-password':
+                        newError.password = 'Password lemah'
+                        break;
+                    case 'auth/operation-not-allowed':
+                        newError.email = 'Metode email dan password tidak didukung'
+                        break;
+                    default:
+                        newError.email = 'Terjadi kesalahan jaringan silahkan coba lagi'
+                        break;
+                }
+                setError(newError);
+                setSubmitting(false);
+            }
         }
+    }
+
+    if (loading) {
+        return <AppLoading />
+    }
+    if (user) {
+        return <Redirect to="/" />
     }
 
     return <Container maxWidth="xs">
@@ -101,6 +146,7 @@ export default function Registrasi () {
                     onChange={handleChange}
                     helperText={error.email}
                     error={error.email ? true : false}
+                    disabled={isSubmiting}
                 />
                 <TextField id="password"
                     type="password"
@@ -113,6 +159,7 @@ export default function Registrasi () {
                     onChange={handleChange}
                     helperText={error.password}
                     error={error.password ? true : false}
+                    disabled={isSubmiting}
                 />
                 <TextField id="konfirmasi_password"
                     type="password"
@@ -125,13 +172,14 @@ export default function Registrasi () {
                     onChange={handleChange}
                     helperText={error.konfirmasi_password}
                     error={error.konfirmasi_password ? true : false}
+                    disabled={isSubmiting}
                 />
                 <Grid container className={classes.buttons}>
                     <Grid item xs>
-                        <Button type="submit" color="primary" variant="contained" size="large">Daftar</Button>
+                        <Button type="submit" color="primary" variant="contained" size="large" disabled={isSubmiting}>Daftar</Button>
                     </Grid>
                     <Grid item>
-                        <Button component={Link} variant="contained" size="large" to="/login">Login</Button>
+                        <Button disabled={isSubmiting} component={Link} variant="contained" size="large" to="/login">Login</Button>
                     </Grid>
                 </Grid>
             </form>
