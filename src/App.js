@@ -16,25 +16,30 @@ import CssBaseLine from '@material-ui/core/CssBaseline';
 import { ThemeProvider } from '@material-ui/core/styles'; // replace
 import theme from './config/theme'
 
+// notistack
+import { SnackbarProvider } from 'notistack'
+
 function App () {
   return (
     <>
       <CssBaseLine>
         <ThemeProvider theme={theme}>
-          <FirebaseProvider>
-            <Router>
-              <Switch>
-                <PrivateRoute path="/" exact component={Private} />
-                <PrivateRoute path="/produk" component={Private} />
-                <PrivateRoute path="/transaksi" component={Private} />
-                <PrivateRoute path="/pengaturan" component={Private} />
-                <Route path="/registrasi" component={Registrasi} />
-                <Route path="/login" component={Login} />
-                <Route path="/lupa-password" component={LupaPassword} />
-                <Route component={NotFound} />
-              </Switch>
-            </Router>
-          </FirebaseProvider>
+          <SnackbarProvider maxSnack={3} autoHideDuration={3000}>
+            <FirebaseProvider>
+              <Router>
+                <Switch>
+                  <PrivateRoute path="/" exact component={Private} />
+                  <PrivateRoute path="/produk" component={Private} />
+                  <PrivateRoute path="/transaksi" component={Private} />
+                  <PrivateRoute path="/pengaturan" component={Private} />
+                  <Route path="/registrasi" component={Registrasi} />
+                  <Route path="/login" component={Login} />
+                  <Route path="/lupa-password" component={LupaPassword} />
+                  <Route component={NotFound} />
+                </Switch>
+              </Router>
+            </FirebaseProvider>
+          </SnackbarProvider>
         </ThemeProvider>
       </CssBaseLine>
     </>
